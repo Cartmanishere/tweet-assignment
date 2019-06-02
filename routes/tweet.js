@@ -42,7 +42,7 @@ router.get('/:tweetId/like', verifyJWT, (req, res) => {
         if (tweet.likes.includes(req.user._id)) {
             return response.sendError(res, new Error("Tweet already liked"))
         }
-        tweet.likes.push(req.user._id)
+        tweet.likes.push(req.user._id);
         tweet.save().then(tweet => {
             return response.sendMessage(res, "Tweet liked")
         }).catch(err => {
@@ -125,6 +125,22 @@ router.get('/:tweetId/retweets', (req, res) => {
         logger.error(err);
         return response.sendError(res, err)
     })
+});
+
+route.get('/:tweetId/delete', verifyJWT, (req, res) => {
+   Tweet.findById(req.params.tweetId).then(tweet => {
+       if(!tweet) {
+           return response.sendError(res, new Error("Tweet not found"), 404)
+       }
+       if (tweet.user !== req.user._id) {
+           return response.sendError(res, new Error("You do not have permission"), 402)
+       }
+       Tweet.findByIdAndDelete(req.params.tweetId).then(tweet => {
+           return response.sendMessage(res, "Tweet deleted")
+       }).catch(err => {
+           return response.sendError(res, '')
+       })
+   })
 });
 
 module.exports = router;
